@@ -1,20 +1,47 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import React from 'react';
+
+interface Pockemon {
+  name: string;
+  url: string;
+  [key:string]: string;
+}
+
+interface SelectedPockemon {
+  name: string;
+  height: number;
+  sprites: {
+    front_shiny: string;
+  }
+}
 
 const View = () => {
-  const [error, setError] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [items, setItems] = useState([]);
-  const [inputValue, setInputValue] = useState("");
-  const [searchParam] = useState(["url", "name"]);
-
+  const [error, setError] = useState<Error | null>(null);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [items, setItems] = useState<Pockemon[]>([]);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [searchParam] = useState<string[]>(["url", "name"]);
+  const [selectedPockemon, setSelectedPockemon] = useState<SelectedPockemon | null>(null)
+ 
+  const fetchSelectedPockemon = (url: string) => {
+    fetch(url).then((res)=> res.json())
+    .then(
+      (result) => {
+      setSelectedPockemon(result)
+      },
+   (error) => {
+    setError(error)
+    })
+}
   useEffect(() => {
-    const savedSearchParam = localStorage.getItem("searchTerm");
+    const savedSearchParam = localStorage.getItem('searchTerm')
 
-    if (savedSearchParam) {
-      setInputValue(savedSearchParam);
+    if (savedSearchParam){
+      setInputValue(savedSearchParam)
     }
 
-    fetch("https://pokeapi.co/api/v2/pokemon")
+
+    fetch('https://pokeapi.co/api/v2/pokemon?limit=100')
       .then((res) => res.json())
       .then(
         (result) => {
@@ -24,19 +51,20 @@ const View = () => {
         (error) => {
           setError(error);
           setIsLoaded(true);
-        },
+        }
       );
   }, []);
+  
   const handleSearch = () => {
-    localStorage.setItem("searchTerm", inputValue);
-  };
+    localStorage.setItem('searchTerm', inputValue)
+  }
 
-  function search(items) {
-    return items.filter((item: object) => {
+
+  const search = (items: Pockemon[], searchParam: string[], inputValue: string) => {
+    return items.filter((item: Pockemon) => {
       return searchParam.some((newItem) => {
         return (
-          item[newItem]
-            .toString()
+          item[newItem].toString()
             .toLowerCase()
             .indexOf(inputValue.toLowerCase()) > -1
         );
@@ -51,27 +79,35 @@ const View = () => {
   } else {
     return (
       <>
-        <div className="search-wrapper">
-          <span className="sr-text">Search pockemons here</span>
+        <div className='search-wrapper'>
+        <span className="sr-text">Search pockemons here</span>
           <label htmlFor="search">
             <input
               type="search"
               name="search-form"
               id="search-form"
               value={inputValue}
-              onChange={(e) => {
-                setInputValue(e.target.value);
-              }}
+              onChange={(e) => { setInputValue(e.target.value); }}
             />
             <button onClick={handleSearch}>Search</button>
           </label>
         </div>
+
         <div>
-          {search(items).map((pokemon, index) => (
-            <div key={index}>{pokemon.name}</div>
+          {search(items, searchParam, inputValue).map((pokemon, index) => (
+            <div onClick={() => fetchSelectedPockemon(pokemon.url)} key={index}>{pokemon.name}</div>
           ))}
-        </div>
-      </>
+          </div>
+        { selectedPockemon && (
+        <div>
+          <h2>{selectedPockemon.name}</h2>
+          <img src={selectedPockemon.sprites.front_shiny} alt="" />
+          <p>{selectedPockemon.height}</p>
+         </div>
+        )}
+        </>
+        
+  
     );
   }
 };

@@ -1,12 +1,14 @@
-import "./App.css";
-import View from "./components/View";
+import './App.css'
+import  View from './components/View';
+import React from 'react';
 
 function App() {
+
   return (
     <>
-      <View />
+    <View/>
     </>
-  );
+  )
 }
 
-export default App;
+export default App
